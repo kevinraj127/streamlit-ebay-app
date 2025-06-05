@@ -39,7 +39,10 @@ category_options = {
     "Cell Phones & Smartphones": "9355",             # Cell phones
     "Tablets & eBook Readers": "171485",             # Tablets
     "Books": "267",                                  # Books
-    "Consumer Electronics": "293"                    # General electronics
+    "Consumer Electronics": "293",                   # General electronics
+    "Sporting Goods": "888",                         # Sporting goods
+    "Men's Clothing": "1059",                        # Men's clothing
+    "Men's Shoes": "93427"                           # Men's shoes   
 }
 
 st.title("eBay Product Listings")
@@ -78,13 +81,11 @@ headers = {
     "Content-Type": "application/json"
 }
 
-
-# Run only if user clicks
+# Run search on button click
 if st.button("Search eBay"):
     response = requests.get("https://api.ebay.com/buy/browse/v1/item_summary/search", params=params, headers=headers)
     items = response.json().get("itemSummaries", [])
 
-    # Process results
     results = []
     for item in items:
         title = item.get("title", "")
@@ -92,7 +93,8 @@ if st.button("Search eBay"):
         shipping = float(item.get("shippingOptions", [{}])[0].get("shippingCost", {}).get("value", 0.0))
         total_cost = price + shipping
         end_time = item.get("itemEndDate")
-        #end_time_dt = datetime.fromisoformat(end_time.replace("Z", "+00:00")) if end_time else None
+        end_time_dt = datetime.fromisoformat(end_time.replace("Z", "+00:00")) if end_time else None
+        link = item.get("itemWebUrl")
 
         if total_cost <= max_price:
             results.append({
@@ -104,48 +106,39 @@ if st.button("Search eBay"):
                 "seller": item.get("seller", {}).get("username"),
                 "seller_feedback": item.get("seller", {}).get("feedbackPercentage"),
                 "seller_feedback_score": item.get("seller", {}).get("feedbackScore"),
-                # "link": f"[View Listing]({item.get('itemWebUrl')})"
-                "link": item.get("itemWebUrl")  # Direct link to the listing
-                
+                "link": link
             })
 
-    # if results:
-    #     df = pd.DataFrame(results)
-    #     df = df.sort_values(by=["total"]).reset_index(drop=True)
-    #     st.write(df)
-    # else:
-    #     st.write("No listings found under that price.")
-
-
+    
     if results:
-        style = """
-<style>
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    th {
-        position: sticky;
-        top: 0;
-        background-color: #f9f9f9;
-        z-index: 1;
-        text-align: center;
-        padding: 8px;
-    }
-    td {
-        text-align: center;
-        padding: 8px;
-    }
-</style>
-"""
         df = pd.DataFrame(results)
-        df = df[~df['condition'].str.contains("for parts or not working", case=False, na=False)]
-        df["link"] = df["link"].apply(lambda url: f'<a href="{url}" target="_blank">View Listing</a>')
-        df = df.sort_values(by=["total"]).reset_index(drop=True)
+        df = df.sort_values(by="total").reset_index(drop=True)
+        # Format currency
+        def format_currency(val):
+            return f"${val:,.2f}"
+        df["price"] = df["price"].apply(format_currency)
+        df["shipping"] = df["shipping"].apply(format_currency)
+        df["total"] = df["total"].apply(format_currency)
+            # Style the DataFrame
+        styled_df = df.style.set_properties(
+            **{
+            "text-align": "center",  # center all cells
+            "white-space": "pre-wrap"  # wrap text in 'listing'
+            }
+        ).set_table_styles(
+        [
+            {"selector": "th", "props": [("font-weight", "bold"), ("text-align", "center")]}
+        ]
+    )
 
-        st.write("### eBay Listings")
-        st.write(style + df.to_html(escape=False, index=False), unsafe_allow_html=True)
-else:
+        st.dataframe(
+            styled_df,
+            column_config={
+                "link": st.column_config.LinkColumn("Link", display_text="View Listing")
+            },
+            use_container_width=True
+        )
+    else:
         st.write("No listings found under that price.")
 
 
