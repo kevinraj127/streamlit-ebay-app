@@ -102,30 +102,21 @@ if st.button("Search eBay"):
     results = []
     for item in items:
         title = item.get("title", "")
-        
-        # Check if item is an auction
-        buying_options = item.get("buyingOptions", [])
-        is_auction = "AUCTION" in buying_options
-        
-        # Get price information
-        price_info = item.get("price", {})
-        current_price = float(price_info.get("value", 0.0))
-        
-        # For auctions, this is the current bid price; for fixed price, it's the buy-it-now price
-        current_bid = current_price if is_auction else None
-        
+        price = float(item.get("price", {}).get("value", 0.0))
         shipping = float(item.get("shippingOptions", [{}])[0].get("shippingCost", {}).get("value", 0.0))
-        total_cost = current_price + shipping
+        total_cost = price + shipping
         link = item.get("itemWebUrl")
-        
+        buying_options = item.get("buyingOptions", [])
+       
         # Filter out for parts not working (condition ID: 7000)
         condition_id = item.get("conditionId")
         if condition_id == "7000":
             continue
 
+
         end_time_str = item.get("itemEndDate")
         end_time = "N/A"
-        if is_auction and end_time_str:
+        if "AUCTION" in buying_options and end_time_str:
             try:
                 utc_dt = datetime.datetime.fromisoformat(end_time_str.replace("Z", "+00:00"))
                 local_dt = utc_dt.astimezone()
@@ -133,14 +124,13 @@ if st.button("Search eBay"):
             except Exception:
                 end_time = "Invalid date"
 
-        bid_count = item.get("bidCount") if is_auction else None
+        bid_count = item.get("bidCount") if "AUCTION" in buying_options else None
 
         if total_cost <= max_price:
             results.append({
                 "listing": title,
                 "condition": item.get("condition"),
-                "price": current_price,
-                "current_bid": current_bid,
+                "price": price,
                 "shipping": shipping,
                 "total": total_cost,
                 "listing_type": ", ".join(buying_options),
@@ -157,10 +147,7 @@ if st.button("Search eBay"):
         df = df.sort_values(by="total").reset_index(drop=True)
 
         def format_currency(val):
-            if val is None or pd.isna(val):
-                return "N/A"
             return f"${val:,.2f}"
-        
         for col in ["price", "current_bid", "shipping", "total"]:
             if col in df.columns:
                 df[col] = df[col].apply(format_currency)
