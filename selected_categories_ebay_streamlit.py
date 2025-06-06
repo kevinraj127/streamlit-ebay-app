@@ -98,10 +98,11 @@ if st.button("Search eBay"):
         if total_cost <= max_price:
             results.append({
                 "listing": title,
-                "price": price,
                 "condition": item.get("condition"),
+                "price": price,
                 "shipping": shipping,
                 "total": total_cost,
+                "listing_type": item.get("seller", {}).get("ListingTypeCodeType"),
                 "seller": item.get("seller", {}).get("username"),
                 "seller_feedback": item.get("seller", {}).get("feedbackPercentage"),
                 "seller_feedback_score": item.get("seller", {}).get("feedbackScore"),
