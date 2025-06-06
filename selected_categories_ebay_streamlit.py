@@ -42,7 +42,8 @@ category_options = {
     "Consumer Electronics": "293",                   # General electronics
     "Sporting Goods": "888",                         # Sporting goods
     "Men's Clothing": "1059",                        # Men's clothing
-    "Men's Shoes": "93427"                           # Men's shoes   
+    "Men's Shoes": "93427",                          # Men's shoes
+    "DVD & Blu-ray": "11232"                         # DVD & Blu-ray
 }
 
 st.title("eBay Product Listings")
