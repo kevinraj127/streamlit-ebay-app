@@ -2,15 +2,11 @@ import streamlit as st
 import pandas as pd
 import requests
 import datetime
-import json
 from base64 import b64encode
 
-# Set up eBay API credentials
-
+# eBay API credentials
 CLIENT_ID = st.secrets["ebay"]["CLIENT_ID"]
 CLIENT_SECRET = st.secrets["ebay"]["CLIENT_SECRET"]
-
-
 
 # Encode credentials
 credentials = b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
@@ -25,67 +21,80 @@ data = {
     "grant_type": "client_credentials",
     "scope": "https://api.ebay.com/oauth/api_scope"
 }
-
 response = requests.post(token_url, headers=headers, data=data)
 access_token = response.json().get("access_token")
-#print("Access token:", access_token)
 
-# Browse API endpoint
-search_url = "https://api.ebay.com/buy/browse/v1/item_summary/search"
+# UI
+st.title("eBay Product Listings")
+st.write("Fetch latest eBay listings by category, type, and max price.")
 
-# eBay category mapping
+# Category options with combined Tech Accessories
 category_options = {
     "All Categories": None,
-    "Cell Phones & Smartphones": "9355",             # Cell phones
-    "Tablets & eBook Readers": "171485",             # Tablets
-    "Books": "267",                                  # Books
-    "Consumer Electronics": "293",                   # General electronics
-    "Sporting Goods": "888",                         # Sporting goods
-    "Men's Clothing": "1059",                        # Men's clothing
-    "Men's Shoes": "93427",                          # Men's shoes
-    "DVD & Blu-ray": "617"                           # DVD & Blu-ray
+    "Cell Phones & Smartphones": "9355",
+    "Tablets & eBook Readers": "171485",
+    "Books": "267",
+    "Consumer Electronics": "293",
+    "Sporting Goods": "888",
+    "Men's Clothing": "1059",
+    "Men's Shoes": "93427",
+    "DVD & Blu-ray": "617",
+    "Tech Accessories": ["9394", "176970"]  # Combined category IDs
 }
-
-st.title("eBay Product Listings")
-st.write("This app fetches the latest eBay listings based on selected category and displays them in a table.")
-
-# UI input from user
-
-# Category dropdown
 selected_category = st.selectbox("Category", options=list(category_options.keys()))
 
-# Dropdown filter
+# Listing type dropdown
 listing_type_filter = st.selectbox(
     "Filter by listing type",
     ["All", "Auction", "Fixed Price", "Best Offer"]
 )
 
-# Search term, max price, and limit inputs
+# Search input and filters
 search_term = st.text_input("Search for:", "iPhone")
 max_price = st.number_input("Maximum total price ($):", min_value=1, max_value=10000, value=150)
 limit = st.slider("Number of listings to fetch:", min_value=1, max_value=100, value=25)
 
-# Construct query with exclusions
-query = f'"{search_term}" -(case,cover,keyboard,manual,guide,screen,protector,folio,box,accessory,cable,cord,charger,pen,for parts,not working)'
+# Query exclusions based on category
+if selected_category in ["Cell Phones & Smartphones", "Tablets & eBook Readers"]:
+    query = f'"{search_term}" -(case,cover,keyboard,manual,guide,screen,protector,folio,box,accessory,cable,cord,charger,pen,for parts,not working)'
+elif selected_category == "Tech Accessories":
+    query = f'"{search_term}" -(broken,defective,not working,for parts)'
+else:
+    query = f'"{search_term}"'
 
-# Search parameters
+# Build filters
+filters = [
+    f"price:[50..{max_price}]",
+    "priceCurrency:USD",
+    "conditions:{1000|1500|2000|2500|3000}"
+]
+if listing_type_filter == "Auction":
+    filters.append("buyingOptions:{AUCTION}")
+elif listing_type_filter == "Fixed Price":
+    filters.append("buyingOptions:{FIXED_PRICE}")
+elif listing_type_filter == "Best Offer":
+    filters.append("buyingOptions:{BEST_OFFER}")
+
 params = {
     "q": query,
-    "filter": f"price:[50..{max_price}],priceCurrency:USD,conditions:{{NEW|USED|NEW_OTHER|MANUFACTURER_REFURBISHED|SELLER_REFURBISHED}}",
+    "filter": ",".join(filters),
     "limit": limit
 }
 
-# Add category ID if not "All Categories"
-category_id = category_options[selected_category]
-if category_id:
-    params["category_ids"] = category_id
+# Add category ID(s)
+category_ids = category_options[selected_category]
+if category_ids:
+    if isinstance(category_ids, list):
+        params["category_ids"] = ",".join(category_ids)
+    else:
+        params["category_ids"] = category_ids
 
 headers = {
     "Authorization": f"Bearer {access_token}",
     "Content-Type": "application/json"
 }
 
-# Run search on button click
+# Button to search
 if st.button("Search eBay"):
     response = requests.get("https://api.ebay.com/buy/browse/v1/item_summary/search", params=params, headers=headers)
     items = response.json().get("itemSummaries", [])
@@ -100,27 +109,16 @@ if st.button("Search eBay"):
         link = item.get("itemWebUrl")
         buying_options = item.get("buyingOptions", [])
 
-        
-        # Apply dropdown filter
-        if listing_type_filter == "Auction" and "AUCTION" not in buying_options:
-            continue
-        elif listing_type_filter == "Fixed Price" and "FIXED_PRICE" not in buying_options:
-            continue
-        elif listing_type_filter == "Best Offer" and "BEST_OFFER" not in buying_options:
-            continue
-
-        # Determine end time if it's an auction
         end_time_str = item.get("itemEndDate")
         end_time = "N/A"
         if "AUCTION" in buying_options and end_time_str:
             try:
-                utc_dt = datetime.fromisoformat(end_time_str.replace("Z", "+00:00"))
-                local_dt = utc_dt.astimezone()  # Convert to local time
+                utc_dt = datetime.datetime.fromisoformat(end_time_str.replace("Z", "+00:00"))
+                local_dt = utc_dt.astimezone()
                 end_time = local_dt.strftime("%Y-%m-%d %I:%M %p %Z")
             except Exception:
-                end_time = "Not in Auction"
-        
-        # Number of bids (only for auctions)
+                end_time = "Invalid date"
+
         bid_count = item.get("bidCount") if "AUCTION" in buying_options else None
 
         if total_cost <= max_price:
@@ -130,7 +128,7 @@ if st.button("Search eBay"):
                 "current_bid" if "AUCTION" in buying_options else "price": price,
                 "shipping": shipping,
                 "total": total_cost,
-                "listing_type": item.get("buyingOptions", []),
+                "listing_type": ", ".join(buying_options),
                 "bid_count": bid_count,
                 "auction_end_time": end_time,
                 "seller": item.get("seller", {}).get("username"),
@@ -139,27 +137,21 @@ if st.button("Search eBay"):
                 "link": link
             })
 
-    
     if results:
         df = pd.DataFrame(results)
         df = df.sort_values(by="total").reset_index(drop=True)
-        # Format currency
+
         def format_currency(val):
             return f"${val:,.2f}"
-        df["price"] = df["price"].apply(format_currency)
-        df["shipping"] = df["shipping"].apply(format_currency)
-        df["total"] = df["total"].apply(format_currency)
-            # Style the DataFrame
+        for col in ["price", "current_bid", "shipping", "total"]:
+            if col in df.columns:
+                df[col] = df[col].apply(format_currency)
+
         styled_df = df.style.set_properties(
-            **{
-            "text-align": "center",  # center all cells
-            "white-space": "pre-wrap"  # wrap text in 'listing'
-            }
-        ).set_table_styles(
-        [
+            **{"text-align": "center", "white-space": "pre-wrap"}
+        ).set_table_styles([
             {"selector": "th", "props": [("font-weight", "bold"), ("text-align", "center")]}
-        ]
-    )
+        ])
 
         st.dataframe(
             styled_df,
@@ -170,6 +162,3 @@ if st.button("Search eBay"):
         )
     else:
         st.write("No listings found under that price.")
-
-
-
