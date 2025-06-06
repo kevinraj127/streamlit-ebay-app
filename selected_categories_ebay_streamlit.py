@@ -131,7 +131,8 @@ if st.button("Search eBay"):
             results.append({
                 "listing": title,
                 "condition": item.get("condition"),
-                "current_bid" if "AUCTION" in buying_options else "price": price,
+                "current_bid": price if "AUCTION" in buying_options else None,
+                "price": price if "FIXED_PRICE" in buying_options else None,
                 "shipping": shipping,
                 "total": total_cost,
                 "listing_type": ", ".join(buying_options),
