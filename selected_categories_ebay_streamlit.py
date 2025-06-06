@@ -108,6 +108,12 @@ if st.button("Search eBay"):
         total_cost = price + shipping
         link = item.get("itemWebUrl")
         buying_options = item.get("buyingOptions", [])
+        
+        # Filter out for parts not working (condition ID: 7000)
+        condition_id = item.get("conditionId")
+        if condition_id == "7000":
+            continue
+
 
         end_time_str = item.get("itemEndDate")
         end_time = "N/A"
