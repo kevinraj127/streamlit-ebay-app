@@ -54,6 +54,12 @@ st.write("This app fetches the latest eBay listings based on selected category a
 # Category dropdown
 selected_category = st.selectbox("Category", options=list(category_options.keys()))
 
+# Dropdown filter
+listing_type_filter = st.selectbox(
+    "Filter by listing type",
+    ["All", "Auction", "Fixed Price", "Best Offer"]
+)
+
 # Search term, max price, and limit inputs
 search_term = st.text_input("Search for:", "iPhone")
 max_price = st.number_input("Maximum total price ($):", min_value=1, max_value=10000, value=150)
@@ -61,9 +67,6 @@ limit = st.slider("Number of listings to fetch:", min_value=1, max_value=100, va
 
 # Construct query with exclusions
 query = f'"{search_term}" -(case,cover,keyboard,manual,guide,screen,protector,folio,box,accessory,cable,cord,charger,pen,for parts,not working)'
-
-
-
 
 # Search parameters
 params = {
@@ -81,12 +84,6 @@ headers = {
     "Authorization": f"Bearer {access_token}",
     "Content-Type": "application/json"
 }
-
-# Dropdown filter
-listing_type_filter = st.selectbox(
-    "Filter by listing type",
-    ["All", "Auction", "Fixed Price", "Best Offer"]
-)
 
 # Run search on button click
 if st.button("Search eBay"):
