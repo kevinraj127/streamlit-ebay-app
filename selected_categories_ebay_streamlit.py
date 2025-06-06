@@ -82,6 +82,12 @@ headers = {
     "Content-Type": "application/json"
 }
 
+# Dropdown filter
+listing_type_filter = st.selectbox(
+    "Filter by listing type",
+    ["All", "Auction", "Fixed Price", "Best Offer"]
+)
+
 # Run search on button click
 if st.button("Search eBay"):
     response = requests.get("https://api.ebay.com/buy/browse/v1/item_summary/search", params=params, headers=headers)
@@ -96,6 +102,15 @@ if st.button("Search eBay"):
         total_cost = price + shipping
         link = item.get("itemWebUrl")
         buying_options = item.get("buyingOptions", [])
+
+        
+        # Apply dropdown filter
+        if listing_type_filter == "Auction" and "AUCTION" not in buying_options:
+            continue
+        elif listing_type_filter == "Fixed Price" and "FIXED_PRICE" not in buying_options:
+            continue
+        elif listing_type_filter == "Best Offer" and "BEST_OFFER" not in buying_options:
+            continue
 
         # Determine end time if it's an auction
         end_time_str = item.get("itemEndDate")
