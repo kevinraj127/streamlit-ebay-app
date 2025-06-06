@@ -102,8 +102,7 @@ if st.button("Search eBay"):
     results = []
     for item in items:
         title = item.get("title", "")
-        raw_price = item.get("price", {}).get("value")
-        price = float(raw_price) if raw_price else 0.0
+        price = float(item.get("price", {}).get("value", 0.0))
         shipping = float(item.get("shippingOptions", [{}])[0].get("shippingCost", {}).get("value", 0.0))
         total_cost = price + shipping
         link = item.get("itemWebUrl")
@@ -131,8 +130,7 @@ if st.button("Search eBay"):
             results.append({
                 "listing": title,
                 "condition": item.get("condition"),
-                "current_bid": price if "AUCTION" in buying_options else None,
-                "price": price if "FIXED_PRICE" in buying_options else None,
+                "price": price,
                 "shipping": shipping,
                 "total": total_cost,
                 "listing_type": ", ".join(buying_options),
