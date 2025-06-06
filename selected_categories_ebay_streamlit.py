@@ -93,8 +93,6 @@ if st.button("Search eBay"):
         price = float(item.get("price", {}).get("value", 0))
         shipping = float(item.get("shippingOptions", [{}])[0].get("shippingCost", {}).get("value", 0.0))
         total_cost = price + shipping
-        end_time = item.get("itemEndDate")
-        end_time_dt = datetime.fromisoformat(end_time.replace("Z", "+00:00")) if end_time else None
         link = item.get("itemWebUrl")
 
         if total_cost <= max_price:
