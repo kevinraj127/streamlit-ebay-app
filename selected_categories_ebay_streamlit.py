@@ -94,6 +94,18 @@ if st.button("Search eBay"):
         shipping = float(item.get("shippingOptions", [{}])[0].get("shippingCost", {}).get("value", 0.0))
         total_cost = price + shipping
         link = item.get("itemWebUrl")
+        buying_options = item.get("buyingOptions", [])
+
+        # Determine end time if it's an auction
+        end_time_str = item.get("itemEndDate")
+        end_time = "N/A"
+        if "AUCTION" in buying_options and end_time_str:
+            try:
+                utc_dt = datetime.fromisoformat(end_time_str.replace("Z", "+00:00"))
+                local_dt = utc_dt.astimezone()  # Convert to local time
+                end_time = local_dt.strftime("%Y-%m-%d %I:%M %p %Z")
+            except Exception:
+                end_time = "Not in Auction"
 
         if total_cost <= max_price:
             results.append({
@@ -102,7 +114,8 @@ if st.button("Search eBay"):
                 "price": price,
                 "shipping": shipping,
                 "total": total_cost,
-                "listing_type": item.get("seller", {}).get("ListingTypeCodeType"),
+                "listing_type": item.get("buyingOptions", []),
+                "auction_end_time": end_time,
                 "seller": item.get("seller", {}).get("username"),
                 "seller_feedback": item.get("seller", {}).get("feedbackPercentage"),
                 "seller_feedback_score": item.get("seller", {}).get("feedbackScore"),
