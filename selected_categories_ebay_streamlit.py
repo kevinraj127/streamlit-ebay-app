@@ -39,7 +39,7 @@ category_options = {
     "Men's Clothing": "1059",
     "Men's Shoes": "93427",
     "DVD & Blu-ray": "617",
-    "Tech Accessories": ["9394", "176970"]  # Combined category IDs
+    "Tech Accessories": "9394"  # Combined category IDs
 }
 selected_category = st.selectbox("Category", options=list(category_options.keys()))
 
