@@ -107,7 +107,6 @@ if st.button("Search eBay"):
         total_cost = price + shipping
         link = item.get("itemWebUrl")
         buying_options = item.get("buyingOptions", [])
-        image_url = item.get("image", {}).get("imageUrl", None)
        
         # Filter out for parts not working (condition ID: 7000)
         condition_id = item.get("conditionId")
@@ -140,8 +139,7 @@ if st.button("Search eBay"):
                 "seller": item.get("seller", {}).get("username"),
                 "seller_feedback": item.get("seller", {}).get("feedbackPercentage"),
                 "seller_feedback_score": item.get("seller", {}).get("feedbackScore"),
-                "link": link,
-                "image": st.image(image_url, width=200) if image_url else None
+                "link": link
             })
 
     if results:
