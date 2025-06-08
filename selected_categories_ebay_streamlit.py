@@ -31,15 +31,16 @@ st.write("Fetch latest eBay listings by category, type, and max price.")
 # Category options with combined Tech Accessories
 category_options = {
     "All Categories": None,
+    "Books": "267",
     "Cell Phones & Smartphones": "9355",
     "Cell Phone/Tablet Accessories": "9394",
-    "Tablets & eBook Readers": "171485",
-    "Books": "267",
     "Consumer Electronics": "293",
-    "Sporting Goods": "888",
+    "DVD & Blu-ray": "617",
+    "Furniture": "3197",
     "Men's Clothing": "1059",
     "Men's Shoes": "93427",
-    "DVD & Blu-ray": "617"
+    "Sporting Goods": "888",
+    "Tablets & eBook Readers": "171485"
     
 }
 selected_category = st.selectbox("Category", options=list(category_options.keys()))
