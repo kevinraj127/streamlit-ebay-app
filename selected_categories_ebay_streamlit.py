@@ -36,6 +36,7 @@ category_options = {
     "Cell Phone/Tablet Accessories": "9394",
     "Consumer Electronics": "293",
     "DVD & Blu-ray": "617",
+    "Fragrances": "180345",
     "Furniture": "3197",
     "Men's Clothing": "1059",
     "Men's Shoes": "93427",
@@ -52,15 +53,15 @@ listing_type_filter = st.selectbox(
 )
 
 # Search input and filters
-search_term = st.text_input("Search for:", "iPhone")
+search_term = st.text_input("Search for:", None)
 max_price = st.number_input("Maximum total price ($):", min_value=1, max_value=10000, value=150)
 limit = st.slider("Number of listings to fetch:", min_value=1, max_value=100, value=25)
 
 # Query exclusions based on category
 if selected_category in ["Cell Phones & Smartphones", "Tablets & eBook Readers"]:
-    query = f'"{search_term}" -(case,cover,keyboard,manual,guide,screen,protector,folio,box,accessory,cable,cord,charger,pen,for parts,not working)'
+    query = f'"{search_term}" -(case,cover,keyboard,manual,guide,screen,protector,folio,box,accessory,cable,cord,charger,pen,for parts,not working, empty box)'
 elif selected_category == "Tech Accessories":
-    query = f'"{search_term}" -(broken,defective,not working,for parts)'
+    query = f'"{search_term}" -(broken,defective,not working,for parts, empty box)'
 else:
     query = f'"{search_term}"'
 
