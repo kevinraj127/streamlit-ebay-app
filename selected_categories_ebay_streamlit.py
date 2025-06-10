@@ -8,6 +8,7 @@ from base64 import b64encode
 CLIENT_ID = st.secrets["ebay"]["CLIENT_ID"]
 CLIENT_SECRET = st.secrets["ebay"]["CLIENT_SECRET"]
 
+
 # Encode credentials
 credentials = b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
 
@@ -23,6 +24,32 @@ data = {
 }
 response = requests.post(token_url, headers=headers, data=data)
 access_token = response.json().get("access_token")
+
+# Seller categorization function
+def categorize_seller(feedback_score, feedback_percent):
+    # Convert to numbers, handle None values
+    try:
+        score = int(feedback_score) if feedback_score is not None else 0
+        percent = float(feedback_percent) if feedback_percent is not None else 0
+    except (ValueError, TypeError):
+        return "Uncategorized"
+    
+    if score >= 5000 and percent >= 99:
+        return "Elite"
+    elif score >= 1000 and percent >= 98:
+        return "Excellent"
+    elif score >= 500 and percent >= 97:
+        return "Very Good"
+    elif score >= 100 and percent >= 95:
+        return "Good"
+    elif score >= 100 and percent >= 90:
+        return "Average"
+    elif score < 100 and percent >= 90:
+        return "Inexperienced"
+    elif percent < 90:
+        return "Low Rated"
+    else:
+        return "Uncategorized"
 
 # UI
 st.title("eBay Product Listings")
@@ -50,6 +77,13 @@ selected_category = st.selectbox("Category", options=list(category_options.keys(
 listing_type_filter = st.selectbox(
     "Filter by listing type",
     ["All", "Auction", "Fixed Price", "Best Offer"]
+)
+
+# Seller rating filter (multi-select)
+seller_rating_filter = st.multiselect(
+    "Filter by seller rating (select multiple or leave empty for all)",
+    ["Elite", "Excellent", "Very Good", "Good"],
+    default=[]
 )
 
 # Search input and filters
@@ -116,6 +150,18 @@ if st.button("Search eBay"):
         if condition_id == "7000":
             continue
 
+        # Get seller information
+        seller_info = item.get("seller", {})
+        seller_username = seller_info.get("username", "")
+        seller_feedback_score = seller_info.get("feedbackScore", 0)
+        seller_feedback_percent = seller_info.get("feedbackPercentage", 0)
+        
+        # Categorize seller
+        seller_category = categorize_seller(seller_feedback_score, seller_feedback_percent)
+        
+        # Apply seller rating filter (updated for multi-select)
+        if seller_rating_filter and seller_category not in seller_rating_filter:
+            continue
 
         end_time_str = item.get("itemEndDate")
         end_time = "N/A"
@@ -139,9 +185,10 @@ if st.button("Search eBay"):
                 "listing_type": ", ".join(buying_options),
                 "bid_count": bid_count,
                 "auction_end_time": end_time,
-                "seller": item.get("seller", {}).get("username"),
-                "seller_feedback": item.get("seller", {}).get("feedbackPercentage"),
-                "seller_feedback_score": item.get("seller", {}).get("feedbackScore"),
+                "seller": seller_username,
+                "seller_rating": seller_category,
+                "seller_feedback": seller_feedback_percent,
+                "seller_feedback_score": seller_feedback_score,
                 "link": link
             })
 
