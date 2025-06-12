@@ -346,8 +346,6 @@ if search_clicked:
                             "listing": title,
                             "condition": item.get("condition"),
                             "price": price,
-                            "shipping": shipping,
-                            "total": total_cost,
                             "listing_type": ", ".join(buying_options),
                             "bid_count": bid_count,
                             "auction_end_time": end_time,
@@ -373,7 +371,7 @@ if search_clicked:
                         return f"${val:,.2f}"
                     
                     df_display = df.copy()
-                    for col in ["price", "shipping", "total"]:
+                    for col in ["price"]:
                         if col in df_display.columns:
                             df_display[col] = df_display[col].apply(format_currency)
 
@@ -412,7 +410,7 @@ if search_clicked:
                         return f"${val:,.2f}"
                     
                     df_display = df.copy()
-                    for col in ["price", "shipping", "total"]:
+                    for col in ["price"]:
                         if col in df_display.columns:
                             df_display[col] = df_display[col].apply(format_currency)
 
