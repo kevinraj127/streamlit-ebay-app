@@ -132,24 +132,6 @@ def create_price_analytics(df):
     else:
         st.info("No significant deals found in current results.")
 
-# Email functionality
-def create_email_link(df):
-    # Convert dataframe to HTML table
-    html_table = df.to_html(index=False, escape=False, table_id="results_table")
-    email_body = f"<h3>eBay Search Results</h3>\n\n{html_table}"
-    
-    # Email parameters
-    subject = f"eBay Search Results - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
-    
-    # URL encode the email content
-    subject_encoded = urllib.parse.quote(subject)
-    body_encoded = urllib.parse.quote(email_body)
-    
-    # Create mailto link
-    mailto_link = f"mailto:?subject={subject_encoded}&body={body_encoded}"
-    
-    return mailto_link
-
 # UI
 st.title("eBay Product Listings")
 st.write("Fetch latest eBay listings by category, type, and max price.")
@@ -374,7 +356,7 @@ if search_clicked:
                             "link": link
                         })
 
-                if results:
+                if results and buying_options != ["AUCTION"]:
                     df = pd.DataFrame(results)
                     df = df.sort_values(by="total").reset_index(drop=True)
 
@@ -417,5 +399,47 @@ if search_clicked:
                     )
                     
                     st.success(f"Found {len(results)} listings")
+                elif results and buying_options == ["AUCTION"]: 
+                    st.header("📋 Auction Listings")
+                    
+                    df = pd.DataFrame(results)
+                    df = df.sort_values(by="total").reset_index(drop=True)
+
+                    # Format currency columns
+                    def format_currency(val):
+                        return f"${val:,.2f}"
+                    
+                    df_display = df.copy()
+                    for col in ["price", "shipping", "total"]:
+                        if col in df_display.columns:
+                            df_display[col] = df_display[col].apply(format_currency)
+
+                    styled_df = df_display.style.set_properties(
+                        **{"text-align": "center", "white-space": "pre-wrap"}
+                    ).set_table_styles([
+                        {"selector": "th", "props": [("font-weight", "bold"), ("text-align", "center")]}
+                    ])
+
+                    st.dataframe(
+                        styled_df,
+                        column_config={
+                            "link": st.column_config.LinkColumn("Link", display_text="View Listing")
+                        },
+                        sort_by="auction_end_time",
+                        sort_order="asc",
+                        use_container_width=True
+                    )
+                    
+                    # Export functionality
+                    csv = df.to_csv(index=False)
+                    st.download_button(
+                        "📥 Download Results as CSV",
+                        csv,
+                        f"ebay_search_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+                        "text/csv"
+                    )
+                    
+                    st.success(f"Found {len(results)} auction listings")
+                    
                 else:
                     st.info("No listings found matching your criteria.")
