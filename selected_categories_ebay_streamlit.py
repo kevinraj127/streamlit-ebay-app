@@ -84,7 +84,7 @@ def save_current_search(search_params):
 
 def load_saved_search(search_params):
     """Load saved search parameters into session state"""
-    for key, value in search_params.items():
+    for key, value in search_.items():
         st.session_state[f"loaded_{key}"] = value
 
 def delete_saved_search(index):
@@ -251,7 +251,8 @@ with col2:
             'listing_type': listing_type_filter,
             'seller_rating': seller_rating_filter,
             'max_price': max_price,
-            'limit': limit
+            'limit': limit,
+            'deliveryCountry': "US"
         }
         
         if save_current_search(search_params):
@@ -294,7 +295,8 @@ if search_clicked:
         params = {
             "q": query,
             "filter": ",".join(filters),
-            "limit": limit
+            "limit": limit,
+            "deliveryCountry": "US"
         }
 
         category_ids = category_options[selected_category]
