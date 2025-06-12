@@ -349,7 +349,8 @@ if search_clicked:
                     if "AUCTION" in buying_options and end_time_str:
                         try:
                             utc_dt = datetime.datetime.fromisoformat(end_time_str.replace("Z", "+00:00"))
-                            local_dt = utc_dt.astimezone()
+                            central = pytz.timezone('US/Central')
+                            local_dt = utc_dt.astimezone(central)
                             end_time = local_dt.strftime("%Y-%m-%d %I:%M %p %Z")
                         except Exception:
                             end_time = "Invalid date"
