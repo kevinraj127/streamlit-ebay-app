@@ -103,21 +103,21 @@ def create_price_analytics(df):
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        avg_price = df['total'].mean()
-        st.metric("Average Total", f"${avg_price:.2f}")
+        avg_price = df['price'].mean()
+        st.metric("Average Price", f"${avg_price:.2f}")
     
     with col2:
-        median_price = df['total'].median()
-        st.metric("Median Total", f"${median_price:.2f}")
+        median_price = df['price'].median()
+        st.metric("Median Price", f"${median_price:.2f}")
     
     with col3:
-        deal_count = len(df[df['total'] < (avg_price * 0.85)])
+        deal_count = len(df[df['price'] < (avg_price * 0.85)])
         st.metric("Potential Deals", f"{deal_count} item(s)", 
                  help="Items priced 15% below average")
     
     # Highlight best deals
     st.subheader("🎯 Best Deals (15% below average)")
-    deals = df[df['total'] < (avg_price * 0.85)]
+    deals = df[df['price'] < (avg_price * 0.85)]
     if not deals.empty:
         # Convert back to formatted prices for display
         deals_display = df[df.index.isin(deals.index)].copy()
@@ -125,7 +125,7 @@ def create_price_analytics(df):
             lambda x: f"${avg_price - df.loc[x, 'total']:.2f}"
         )
         st.dataframe(
-            deals_display[['listing', 'condition', 'total', 'savings', 'seller', 'seller_rating', 'seller_feedback', 'link']],
+            deals_display[['listing', 'condition', 'price', 'savings', 'seller', 'seller_rating', 'seller_feedback', 'link']],
             column_config={
                 "link": st.column_config.LinkColumn("Link", display_text="View Deal")
             },
