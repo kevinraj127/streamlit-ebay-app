@@ -122,7 +122,7 @@ def create_price_analytics(df):
         # Convert back to formatted prices for display
         deals_display = df[df.index.isin(deals.index)].copy()
         deals_display['savings'] = deals_display.index.map(
-            lambda x: f"${avg_price - df.loc[x, 'total']:.2f}"
+            lambda x: f"${avg_price - df.loc[x, 'price']:.2f}"
         )
         st.dataframe(
             deals_display[['listing', 'condition', 'price', 'savings', 'seller', 'seller_rating', 'seller_feedback', 'link']],
