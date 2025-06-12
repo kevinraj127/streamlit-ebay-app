@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import datetime
+import pytz
 import plotly.express as px
 import plotly.graph_objects as go
 from base64 import b64encode
@@ -9,6 +10,7 @@ import json
 import urllib.parse
 import os
 import warnings
+
 
 # Initialize session state for saved searches
 if 'saved_searches' not in st.session_state:
@@ -356,7 +358,7 @@ if search_clicked:
                             "link": link
                         })
 
-                if results and buying_options != ["AUCTION"]:
+                if results and listing_type_filter != "Auction":
                     df = pd.DataFrame(results)
                     df = df.sort_values(by="total").reset_index(drop=True)
 
@@ -399,7 +401,7 @@ if search_clicked:
                     )
                     
                     st.success(f"Found {len(results)} listings")
-                elif results and buying_options == ["AUCTION"]: 
+                elif results and listing_type_filter == "Auction": 
                     st.header("📋 Auction Listings")
                     
                     df = pd.DataFrame(results)
