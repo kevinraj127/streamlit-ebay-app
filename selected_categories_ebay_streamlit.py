@@ -405,7 +405,7 @@ if search_clicked:
                     st.header("📋 Auction Listings")
                     
                     df = pd.DataFrame(results)
-                    df = df.sort_values(by="total").reset_index(drop=True)
+                    df = df.sort_values(by="auction_end_time", ascending=True, na_position="last").reset_index(drop=True)
 
                     # Format currency columns
                     def format_currency(val):
@@ -427,8 +427,6 @@ if search_clicked:
                         column_config={
                             "link": st.column_config.LinkColumn("Link", display_text="View Listing")
                         },
-                        sort_by="auction_end_time",
-                        sort_order="asc",
                         use_container_width=True
                     )
                     
