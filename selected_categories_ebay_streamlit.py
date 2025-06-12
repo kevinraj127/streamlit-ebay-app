@@ -358,7 +358,7 @@ if search_clicked:
 
                 if results and listing_type_filter != "Auction":
                     df = pd.DataFrame(results)
-                    df = df.sort_values(by="total").reset_index(drop=True)
+                    df = df.sort_values(by="price").reset_index(drop=True)
 
                     # Price Analytics Dashboard
                     st.header("📊 Price Analytics")
