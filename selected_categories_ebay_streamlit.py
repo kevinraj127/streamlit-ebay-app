@@ -312,6 +312,7 @@ if search_clicked:
                     title = item.get("title", "")
                     price = float(item.get("price", {}).get("value", 0.0))
                     shipping = float(item.get("shippingOptions", [{}])[0].get("shippingCost", {}).get("value", 0.0))
+                    shipping_method = shipping_options[0].get("shippingService", "Not Provided")
                     total_cost = price + shipping
                     link = item.get("itemWebUrl")
                     buying_options = item.get("buyingOptions", [])
@@ -353,6 +354,7 @@ if search_clicked:
                             "condition": item.get("condition"),
                             "price": price,
                             "shipping": shipping,
+                            "shipping_method": shipping_method, 
                             "total": total_cost,
                             "listing_type": ", ".join(buying_options),
                             "bid_count": bid_count,
