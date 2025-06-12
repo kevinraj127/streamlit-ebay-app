@@ -404,6 +404,7 @@ if search_clicked:
                     st.header("📋 Auction Listings")
                     
                     df = pd.DataFrame(results)
+                    df = df.drop(columns=['price'])
                     df = df.sort_values(by="auction_end_time", ascending=True, na_position="last").reset_index(drop=True)
 
                     # Format currency columns
