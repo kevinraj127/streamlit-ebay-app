@@ -132,6 +132,23 @@ def create_price_analytics(df):
     else:
         st.info("No significant deals found in current results.")
 
+# Email functionality
+def create_email_link(df):
+    # Convert dataframe to HTML table
+    html_table = df.to_html(index=False, escape=False, table_id="results_table")
+    email_body = f"<h3>eBay Search Results</h3>\n\n{html_table}"
+    
+    # Email parameters
+    subject = f"eBay Search Results - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    
+    # URL encode the email content
+    subject_encoded = urllib.parse.quote(subject)
+    body_encoded = urllib.parse.quote(email_body)
+    
+    # Create mailto link
+    mailto_link = f"mailto:?subject={subject_encoded}&body={body_encoded}"
+    
+    return mailto_link
 
 # UI
 st.title("eBay Product Listings")
@@ -205,11 +222,6 @@ search_term = st.text_input(
     value=st.session_state.get('loaded_search_term', '')
 )
 
-# User-entered ZIP code (default can be your own ZIP)
-zip_code = st.text_input("Enter your ZIP code for shipping estimates", '')
-
-
-# User-entered max-price to filter search results
 max_price = st.number_input(
     "Maximum total price ($):", 
     min_value=1, 
@@ -281,8 +293,6 @@ if search_clicked:
         params = {
             "q": query,
             "filter": ",".join(filters),
-            "buyerPostalCode": zip_code,
-            "shipToCountry": "US",
             "limit": limit
         }
 
@@ -312,8 +322,6 @@ if search_clicked:
                     title = item.get("title", "")
                     price = float(item.get("price", {}).get("value", 0.0))
                     shipping = float(item.get("shippingOptions", [{}])[0].get("shippingCost", {}).get("value", 0.0))
-                    shipping_options = item.get("shippingOptions", [])
-                    shipping_method = shipping_options[0].get("shippingService", "Not Provided")
                     total_cost = price + shipping
                     link = item.get("itemWebUrl")
                     buying_options = item.get("buyingOptions", [])
@@ -355,7 +363,6 @@ if search_clicked:
                             "condition": item.get("condition"),
                             "price": price,
                             "shipping": shipping,
-                            "shipping_method": shipping_method, 
                             "total": total_cost,
                             "listing_type": ", ".join(buying_options),
                             "bid_count": bid_count,
