@@ -208,9 +208,8 @@ search_term = st.text_input(
 # User-entered ZIP code (default can be your own ZIP)
 zip_code = st.text_input("Enter your ZIP code for shipping estimates", '')
 
-# Add to API parameters
-params["buyerPostalCode"] = zip_code
 
+# User-entered max-price to filter search results
 max_price = st.number_input(
     "Maximum total price ($):", 
     min_value=1, 
