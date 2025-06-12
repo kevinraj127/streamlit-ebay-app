@@ -399,7 +399,7 @@ if search_clicked:
                     )
                     
                     st.success(f"Found {len(results)} listings")
-                    st.toast('Hooray!', icon='🎉')
+
                 elif results and listing_type_filter == "Auction": 
                     st.header("📋 Auction Listings")
                     
@@ -439,7 +439,6 @@ if search_clicked:
                     )
                     
                     st.success(f"Found {len(results)} auction listings")
-                    st.toast('Hooray!', icon='🎉')
                     
                 else:
                     st.info("No listings found matching your criteria.")
