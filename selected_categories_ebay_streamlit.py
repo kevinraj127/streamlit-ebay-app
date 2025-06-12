@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import pandas as pd
 import datetime
-import pytz
 import plotly.express as px
 import plotly.graph_objects as go
 from base64 import b64encode
@@ -84,7 +83,7 @@ def save_current_search(search_params):
 
 def load_saved_search(search_params):
     """Load saved search parameters into session state"""
-    for key, value in search_.items():
+    for key, value in search_params.items():
         st.session_state[f"loaded_{key}"] = value
 
 def delete_saved_search(index):
@@ -133,23 +132,6 @@ def create_price_analytics(df):
     else:
         st.info("No significant deals found in current results.")
 
-# Email functionality
-def create_email_link(df):
-    # Convert dataframe to HTML table
-    html_table = df.to_html(index=False, escape=False, table_id="results_table")
-    email_body = f"<h3>eBay Search Results</h3>\n\n{html_table}"
-    
-    # Email parameters
-    subject = f"eBay Search Results - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
-    
-    # URL encode the email content
-    subject_encoded = urllib.parse.quote(subject)
-    body_encoded = urllib.parse.quote(email_body)
-    
-    # Create mailto link
-    mailto_link = f"mailto:?subject={subject_encoded}&body={body_encoded}"
-    
-    return mailto_link
 
 # UI
 st.title("eBay Product Listings")
@@ -223,6 +205,12 @@ search_term = st.text_input(
     value=st.session_state.get('loaded_search_term', '')
 )
 
+# User-entered ZIP code (default can be your own ZIP)
+zip_code = st.text_input("Enter your ZIP code for shipping estimates", '')
+
+# Add to API parameters
+params["buyerPostalCode"] = zip_code
+
 max_price = st.number_input(
     "Maximum total price ($):", 
     min_value=1, 
@@ -251,8 +239,7 @@ with col2:
             'listing_type': listing_type_filter,
             'seller_rating': seller_rating_filter,
             'max_price': max_price,
-            'limit': limit,
-            'deliveryCountry': "US"
+            'limit': limit
         }
         
         if save_current_search(search_params):
@@ -295,8 +282,9 @@ if search_clicked:
         params = {
             "q": query,
             "filter": ",".join(filters),
-            "limit": limit,
-            "deliveryCountry": "US"
+            "buyerPostalCode": zip_code,
+            "shipToCountry": "US",
+            "limit": limit
         }
 
         category_ids = category_options[selected_category]
