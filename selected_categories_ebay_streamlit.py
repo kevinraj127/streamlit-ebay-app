@@ -127,7 +127,8 @@ def create_price_analytics(df):
         st.dataframe(
             deals_display[['listing', 'condition', 'price', 'savings', 'seller', 'seller_rating', 'seller_feedback', 'link']],
             column_config={
-                "link": st.column_config.LinkColumn("Link", display_text="View Deal")
+                "link": st.column_config.LinkColumn("Link", display_text="View Deal"),
+                "price": st.column_config.NumberColumn("price", format="$%.2f")
             },
             use_container_width=True
         )
