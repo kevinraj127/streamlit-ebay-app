@@ -16,10 +16,9 @@ import warnings
 if 'saved_searches' not in st.session_state:
     st.session_state.saved_searches = []
 
-# eBay API credentials
+# # eBay API credentials
 CLIENT_ID = st.secrets["ebay"]["CLIENT_ID"]
 CLIENT_SECRET = st.secrets["ebay"]["CLIENT_SECRET"]
-
 
 # Encode credentials
 credentials = b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
@@ -175,6 +174,7 @@ category_options = {
     "Cell Phone/Tablet Accessories": "9394",
     "Consumer Electronics": "293",
     "DVD & Blu-ray": "617",
+    "Fragrances": "180345",
     "Furniture": "3197",
     "Hats": "52365",
     "Men's Clothing": "1059",
@@ -196,9 +196,21 @@ listing_type_filter = st.selectbox(
     index=["All", "Auction", "Fixed Price", "Best Offer"].index(st.session_state.get('loaded_listing_type', 'All'))
 )
 
+
 seller_rating_filter = st.multiselect(
     "Filter by seller rating (select multiple or leave empty for all)",
     ["Elite", "Excellent", "Very Good", "Good"],
+    help=(
+        """
+        Elite: ≥5000/99% 
+        Excellent: ≥1000/98% 
+        Very Good: ≥500/97%
+        Good: ≥100/95% 
+        Average: ≥100/90% 
+        Inexperienced: <100/≥90%
+        Low Rated: <90%
+    """
+    ),
     default=st.session_state.get('loaded_seller_rating', [])
 )
 
