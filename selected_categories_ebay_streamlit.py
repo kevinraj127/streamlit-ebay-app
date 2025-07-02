@@ -255,13 +255,19 @@ with col2:
         else:
             st.warning("Search already exists!")
 
+# Aspect map for clothes and shoes 
+
+aspect_map = {
+    "Men's Shoes": ("US Shoe Size", "11")
+}
+
 # Execute search
 if search_clicked:
     # Clear loaded values AFTER search is clicked, not before
     for key in list(st.session_state.keys()):
         if key.startswith('loaded_'):
             del st.session_state[key]
-    
+
     if not access_token:
         st.error("Unable to search - missing access token")
     else:
@@ -286,6 +292,19 @@ if search_clicked:
             filters.append("buyingOptions:{FIXED_PRICE}")
         elif listing_type_filter == "Best Offer":
             filters.append("buyingOptions:{BEST_OFFER}")
+
+        # Category-specific filters for men's clothing and shoes
+        if selected_category in aspect_map:
+            aspect_name, aspect_value = aspect_map[selected_category]
+            filters.append(f"aspect_filter={aspect_name}:{{{aspect_value}}}")
+
+            # Also add keyword fallback for both cases
+            if selected_category == "Men's Clothing":
+                query += ' "Medium"'
+            elif selected_category == "Men's Shoes":
+                query += ' "11"'
+
+
 
         params = {
             "q": query,
