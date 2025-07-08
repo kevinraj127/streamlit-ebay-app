@@ -177,6 +177,7 @@ category_options = {
     "Fragrances": "180345",
     "Furniture": "3197",
     "Hats": "52365",
+    "Headphones": "112529",
     "Men's Clothing": "1059",
     "Men's Shoes": "93427",
     "Sporting Goods": "888",
