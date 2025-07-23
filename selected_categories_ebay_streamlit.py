@@ -180,6 +180,8 @@ category_options = {
     "Headphones": "112529",
     "Men's Clothing": "1059",
     "Men's Shoes": "93427",
+    "Music CDs": "176984",
+    "Music Cassettes": "176983",
     "Sporting Goods": "888",
     "Tablets & eBook Readers": "171485"
 }
