@@ -16,10 +16,9 @@ import warnings
 if 'saved_searches' not in st.session_state:
     st.session_state.saved_searches = []
 
-# # # eBay API credentials
+# eBay API credentials
 CLIENT_ID = st.secrets["ebay"]["CLIENT_ID"]
 CLIENT_SECRET = st.secrets["ebay"]["CLIENT_SECRET"]
-
 
 # Encode credentials
 credentials = b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
@@ -65,15 +64,6 @@ def categorize_seller(feedback_score, feedback_percent):
         return "Low Rated"
     else:
         return "Uncategorized"
-
-# Function to check if seller is a charity store
-def is_charity_seller(seller_username):
-    """Check if seller is a charity store (Goodwill or Salvation Army)"""
-    if not seller_username:
-        return False
-    
-    seller_lower = seller_username.lower()
-    return "goodwill" in seller_lower or "salvationarmy" in seller_lower or "svdp" in seller_lower
 
 # Functions for saved searches
 def save_current_search(search_params):
@@ -179,10 +169,7 @@ with st.sidebar:
 # Main search interface
 category_options = {
     "All Categories": None,
-    "Books": "267",
-    "Cell Phones & Smartphones": "9355",
-    "Cell Phone/Tablet Accessories": "9394",
-    "Consumer Electronics": "293",
+    "Action Figures & Accessories": "246",
     "DVD & Blu-ray": "617",
     "Fragrances": "180345",
     "Furniture": "3197",
@@ -193,7 +180,7 @@ category_options = {
     "Music CDs": "176984",
     "Music Cassettes": "176983",
     "Sporting Goods": "888",
-    "Tablets & eBook Readers": "171485"
+    "Video Games & Consoles": "1249"
 }
 
 # Use loaded values if available, otherwise use defaults
@@ -209,13 +196,6 @@ listing_type_filter = st.selectbox(
     index=["All", "Auction", "Fixed Price", "Best Offer"].index(st.session_state.get('loaded_listing_type', 'All'))
 )
 
-# NEW: Seller Type filter
-seller_type_filter = st.selectbox(
-    "Seller Type",
-    ["All", "Charity"],
-    index=["All", "Charity"].index(st.session_state.get('loaded_seller_type', 'All')),
-    help="Charity includes Goodwill and Salvation Army stores"
-)
 
 seller_rating_filter = st.multiselect(
     "Filter by seller rating (select multiple or leave empty for all)",
@@ -265,7 +245,6 @@ with col2:
             'search_term': search_term,
             'category': selected_category,
             'listing_type': listing_type_filter,
-            'seller_type': seller_type_filter,
             'seller_rating': seller_rating_filter,
             'max_price': max_price,
             'limit': limit
@@ -292,7 +271,7 @@ if search_clicked:
     if not access_token:
         st.error("Unable to search - missing access token")
     else:
-        # Query building (seller filtering happens on results, not in query)
+        # Query building
         if selected_category in ["Cell Phones & Smartphones", "Tablets & eBook Readers"]:
             query = f'"{search_term}" -(case,cover,keyboard,manual,guide,screen,protector,folio,box,accessory,cable,cord,charger,pen,for parts,not working, empty box)'
         elif selected_category == "Tech Accessories":
@@ -324,6 +303,8 @@ if search_clicked:
                 query += ' "Medium"'
             elif selected_category == "Men's Shoes":
                 query += ' "11"'
+
+
 
         params = {
             "q": query,
@@ -372,10 +353,6 @@ if search_clicked:
                     seller_feedback_score = seller_info.get("feedbackScore", 0)
                     seller_feedback_percent = seller_info.get("feedbackPercentage", 0)
                     
-                    # Apply seller type filter - filter results by seller username
-                    if seller_type_filter == "Charity" and not is_charity_seller(seller_username):
-                        continue
-                    
                     # Categorize seller
                     seller_category = categorize_seller(seller_feedback_score, seller_feedback_percent)
                     
@@ -395,12 +372,15 @@ if search_clicked:
                             end_time = "Invalid date"
 
                     bid_count = item.get("bidCount") if "AUCTION" in buying_options else None
-
+                    current_bid_price = float(item.get("currentBidPrice", {}).get("value", 0.0)) if "AUCTION" in buying_options else None
+                    total_bid_cost = current_bid_price + shipping if current_bid_price is not None else None
+                    
                     if total_cost <= max_price:
                         results.append({
                             "listing": title,
                             "condition": item.get("condition"),
                             "price": price,
+                            "current_bid_price": current_bid_price,
                             "listing_type": ", ".join(buying_options),
                             "bid_count": bid_count,
                             "auction_end_time": end_time,
@@ -414,6 +394,7 @@ if search_clicked:
                 if results and listing_type_filter != "Auction":
                     df = pd.DataFrame(results)
                     df = df.sort_values(by="price").reset_index(drop=True)
+                    df = df.drop(columns=['current_bid_price', 'bid_count', 'auction_end_time', 'total_bid_cost'], errors='ignore')
 
                     # Price Analytics Dashboard
                     st.header("📊 Price Analytics")
@@ -421,11 +402,6 @@ if search_clicked:
                     
                     st.header("📋 Search Results")
                     
-                    # Show charity filter status if applied
-                    if seller_type_filter == "Charity":
-                        charity_count = len(df)
-                        st.info(f"🏪 Showing {charity_count} listings from charity stores (Goodwill & Salvation Army)")
-                    
                     # Format currency columns
                     def format_currency(val):
                         return f"${val:,.2f}"
@@ -458,29 +434,21 @@ if search_clicked:
                         "text/csv"
                     )
                     
-                    success_message = f"Found {len(results)} listings"
-                    if seller_type_filter == "Charity":
-                        success_message += " from charity stores"
-                    st.success(success_message)
+                    st.success(f"Found {len(results)} listings")
 
                 elif results and listing_type_filter == "Auction": 
                     st.header("📋 Auction Listings")
                     
                     df = pd.DataFrame(results)
-                    df = df.drop(columns=['price'])
+                    df = df.drop(columns=['price', 'total_cost'], errors='ignore')
                     df = df.sort_values(by="auction_end_time", ascending=True, na_position="last").reset_index(drop=True)
-
-                    # Show charity filter status if applied
-                    if seller_type_filter == "Charity":
-                        charity_count = len(df)
-                        st.info(f"🏪 Showing {charity_count} auction listings from charity stores (Goodwill & Salvation Army)")
 
                     # Format currency columns
                     def format_currency(val):
                         return f"${val:,.2f}"
                     
                     df_display = df.copy()
-                    for col in ["price"]:
+                    for col in ["price", "current_bid_price"]:
                         if col in df_display.columns:
                             df_display[col] = df_display[col].apply(format_currency)
 
@@ -507,13 +475,7 @@ if search_clicked:
                         "text/csv"
                     )
                     
-                    success_message = f"Found {len(results)} auction listings"
-                    if seller_type_filter == "Charity":
-                        success_message += " from charity stores"
-                    st.success(success_message)
+                    st.success(f"Found {len(results)} auction listings")
                     
                 else:
-                    no_results_message = "No listings found matching your criteria."
-                    if seller_type_filter == "Charity":
-                        no_results_message = "No listings found from charity stores matching your criteria."
-                    st.info(no_results_message)
+                    st.info("No listings found matching your criteria.")
