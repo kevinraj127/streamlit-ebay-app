@@ -283,7 +283,7 @@ if search_clicked:
         filters = [
             f"price:[1..{max_price}]",
             "priceCurrency:USD",
-            "conditions:{1000|1500|2000|2500|3000|7000}"
+            "conditions:{1000|1500|2000|2500|3000}"
         ]
 
         if listing_type_filter == "Auction":
