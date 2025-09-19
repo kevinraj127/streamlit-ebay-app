@@ -170,6 +170,7 @@ with st.sidebar:
 category_options = {
     "All Categories": None,
     "Action Figures & Accessories": "246",
+    "Books": "267",
     "DVD & Blu-ray": "617",
     "Fragrances": "180345",
     "Furniture": "3197",
